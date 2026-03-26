@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.claude/settings.local.json
+.metrics.json
+.validation-score
+.agent-running
+runs/*
+!runs/latest/
+*.log
+package-lock.json
+coverage/
+.ralph-feedback.md
+.quality-feedback.md
+.progress.log

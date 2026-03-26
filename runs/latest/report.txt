@@ -1,0 +1,65 @@
+
+[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[1m  EXPERIMENT RESULTS: Harness (A) vs. No Harness (B)[0m
+[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+  [0;36mMETRIC                              PROJECT A       PROJECT B      [0m
+  ─────────────────────────────────── ─────────────── ───────────────
+
+  [1;33mValidation[0m
+  Score                               [0;32m34/34          [0m [0;31m17/30          [0m
+
+  [1;33mCode[0m
+  Lines of code                       [0;32m3357           [0m [0;31m478            [0m
+  Source files                        [0;32m26             [0m [0;31m9              [0m
+  Comment ratio %                     [0;32m33             [0m [0;31m0              [0m
+
+  [1;33mTests[0m
+  Test files                          [0;32m31             [0m [0;31m4              [0m
+  Tests passed                        [0;32m314            [0m [0;31m18             [0m
+  Tests failed                        [0;31m0              [0m [0;32m0              [0m
+  Coverage %                          [0;32m86.5           [0m [0;31m20.63          [0m
+
+  [1;33mQuality[0m
+  Lint errors                         [0;31m0              [0m [0;32m0              [0m
+  Lint warnings                       [0;31m0              [0m [0;32m0              [0m
+
+  [1;33mEfficiency[0m
+  Duration (seconds)                  [0;31m4800          [0m [0;32m198            [0m
+  Iterations (commits)                [0;32m18             [0m [0;31m2              [0m
+
+[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+  [1mVerdict:[0m
+
+  Project A (with harness): [0;32m34/34[0m (100%)
+  Project B (no harness):   [0;31m17/30[0m (56%)
+  [2m(Project A has 4 extra checks for its knowledge base)[0m
+
+[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+  [1mQualitative Analysis[0m
+
+## Project A (harness) vs Project B (no harness) — Qualitative Comparison
+
+**Scores:** A = 34/34, B = 17/30
+
+1. **Architecture:** A has 26 source files across 4 layers (`commands/`, `core/`, `fs/`, `linear/`) with clear separation — e.g., `mapper.ts` vs `push-mapper.ts` for each sync direction, `resolver.ts` for ID→name joins. B has 5 flat source files; `linear-client.ts` mixes API calls with data mapping, `markdown.ts` bundles reading/writing/scanning.
+
+2. **Quality:** A opens every file with a module-level docstring linking to KB properties (`// Implements: P3, config-and-formats.md`), uses a typed error hierarchy (`errors.ts`: `ConfigError`, `AuthError`, `ApiError`, `ConflictError`…) with `userMessage` + cause chains. B has zero comments and uses bare `throw new Error()` strings throughout.
+
+3. **Testing:** A has 31 test files (~5K lines) including `property-based.test.ts` (50 random issues for P1 roundtrip), `edge-cases.test.ts` (T1–T20 each tested), and DI-based mocking via interfaces. B has 4 test files, 18 tests total, all concrete examples — no property-based tests, no edge-case suite, no dedicated error-path tests.
+
+4. **What A has that B lacks:**
+   - `src/core/sync-engine.ts`: conflict detection (P6) comparing `remoteUpdatedAt` vs stored timestamps — B's `push.ts` blindly overwrites
+   - `src/core/change-detector.ts` + `hasher.ts`: SHA-256 content hashing for dirty detection — B has no local change tracking
+   - `src/fs/writer.ts`: canonical field-order serialization + soft-delete to `.kb-sync-trash/` (P2, P10) — B uses `gray-matter` default dump, no trash
+   - `src/linear/issue-fetcher.ts` + `ref-data.ts`: raw GraphQL + bulk-fetch-then-join (ADR-002, 6 API calls total) — B calls `issue.assignee`, `issue.state` lazily (O(N) calls)
+   - `src/linear/pagination.ts`: cursor pagination with exponential backoff — B has no pagination at all
+   - `src/core/push-mapper.ts`: field validation before push (P8), assignee collision detection (T5) — B sends raw values unvalidated
+   - Full `kb/` knowledge base (spec, properties P1–P10, edge cases T1–T20, error taxonomy, ADRs) — B has none
+
+5. **Verdict:** The harness (spec + properties + architecture docs) gave A a 6× richer codebase with conflict safety, data integrity guarantees, and production-grade API handling that B — despite being functional — entirely lacks.
+
+  [0;36mFix the harness, not the output.[0m
+

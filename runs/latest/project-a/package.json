@@ -1,0 +1,35 @@
+{
+  "name": "kb-sync",
+  "version": "0.1.0",
+  "description": "Bidirectional sync between a local markdown knowledge base and Linear",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "kb-sync": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@linear/sdk": "^29.0.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "gray-matter": "^4.0.3",
+    "ora": "^8.0.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.5.0",
+    "tsx": "^4.0.0",
+    "vitest": "^2.0.0"
+  }
+}
